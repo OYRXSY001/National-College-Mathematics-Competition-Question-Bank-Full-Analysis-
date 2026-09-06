@@ -32,9 +32,10 @@ svg
 viz/
 docs/marketing/
 
-# build artifacts（exe/zip 打包产物不入库）
+# build artifacts（打包中间产物不入库；v2.0 起桌面版 exe 随仓库发布）
 build/
-dist/
+dist/*
+!dist/数学竞赛题库.exe
 packaging_tmp/
 .bank.lock
 smoke-*.png
@@ -46,3 +47,6 @@ exam-result.png
 
 # 每安装独立的持久 SECRET_KEY（settings 自动生成，绝不入库）
 secret_key.txt
+
+# 微信小程序源码（v2.0 起不随仓库分发）
+微信小程序/
