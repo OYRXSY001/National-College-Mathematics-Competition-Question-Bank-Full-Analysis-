@@ -20,3 +20,29 @@ data/review/*
 3.1
 新建文件夹/
 svg
+--full-page
+*.b64
+.zcode/
+
+# AI agent working dirs
+.agent-teams/
+.dsh-vision-toolkit/
+
+# one-off snapshots & archived marketing assets
+viz/
+docs/marketing/
+
+# build artifacts（exe/zip 打包产物不入库）
+build/
+dist/
+packaging_tmp/
+.bank.lock
+smoke-*.png
+exam-result.png
+
+# 安全扫描与浏览器测试的本地产物
+.mimosa/
+.playwright-mcp/
+
+# 每安装独立的持久 SECRET_KEY（settings 自动生成，绝不入库）
+secret_key.txt

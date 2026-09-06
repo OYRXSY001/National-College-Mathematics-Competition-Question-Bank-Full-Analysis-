@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+{% load content %}
+{% block title %}模拟考试 · {{ attempt.paper.title }}{% endblock %}
+
+{% block extra_js %}
+<script defer src="{% static 'js/exam.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container site-container py-4" style="max-width: 960px;">
+  <header class="paper-header mb-3">
+    <p class="paper-meta">第{{ attempt.paper.edition }}届 · {{ attempt.paper.get_stage_display }} · {{ attempt.paper.original_category_label }}</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <h1 class="h3 mb-0">⏱ 模拟考试 · {{ attempt.paper.title }}</h1>
+      <span class="d-flex align-items-center gap-2">
+        <span class="badge text-bg-light border">剩余 <span id="exam-countdown" data-seconds="{{ remaining_seconds }}">--:--</span></span>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'paper-detail' attempt.paper.pk %}">退出考试</a>
+      </span>
+    </div>
+    <p class="small text-muted mt-2">纸笔作答后，每题如实自评「答对 / 答错 / 没做」，交卷后自动生成成绩单。</p>
+  </header>
+
+  {% for question in questions %}
+  <article class="question-card mb-3 p-3 p-md-4" id="q{{ question.pk }}">
+    <header class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+      <span class="small text-muted">第 {{ forloop.counter }} 题{% if question.score is not None %} · {{ question.score }} 分{% endif %}</span>
+      <span class="badge text-bg-light">{{ question.get_question_type_display }}</span>
+    </header>
+    <div class="question-content">{{ question.stem_md|render_markdown }}</div>
+    {% if question.knowledge_points.all %}
+      <div class="mt-2 mb-2">
+        {% for point in question.knowledge_points.all %}
+          <span class="badge rounded-pill text-bg-secondary me-1">{{ point.name }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <form method="post" action="{% url 'exam-answer' attempt.pk %}" class="d-flex gap-2 flex-wrap mt-3">
+      {% csrf_token %}
+      <input type="hidden" name="qid" value="{{ question.pk }}">
+      <button class="btn btn-sm btn-success {% if question.user_result == 'correct' %}active{% endif %}" type="submit" name="result" value="correct">✔ 答对</button>
+      <button class="btn btn-sm btn-outline-danger {% if question.user_result == 'wrong' %}active{% endif %}" type="submit" name="result" value="wrong">✘ 答错</button>
+      <button class="btn btn-sm btn-outline-secondary {% if question.user_result == 'unanswered' %}active{% endif %}" type="submit" name="result" value="unanswered">没做</button>
+    </form>
+  </article>
+  {% endfor %}
+
+  <div class="d-flex justify-content-center my-4">
+    <form method="post" action="{% url 'exam-submit' attempt.pk %}">
+      {% csrf_token %}
+      <button class="btn btn-primary btn-lg" type="submit">交 卷</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

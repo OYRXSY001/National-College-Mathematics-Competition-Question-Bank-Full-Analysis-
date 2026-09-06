@@ -217,7 +217,13 @@ class Command(BaseCommand):
                 (f"{label} answer_md", str(row.get("answer_md") or "")),
                 (f"{label} solution_md", str(row.get("solution_md") or "")),
             ])
-        issues.extend(validate_markdown_formulas(formula_items))
+        formula_issues, validator_ok = validate_markdown_formulas(formula_items)
+        if not validator_ok:
+            self.stdout.write(self.style.WARNING(
+                "警告: node 校验器不可用，已跳过 KaTeX 语法校验"
+                "（请安装 Node.js 或确认其在 PATH 中）"
+            ))
+        issues.extend(formula_issues)
 
         if issues:
             raise CommandError("导入校验失败:\n" + "\n".join(f"- {issue}" for issue in issues))

@@ -1,0 +1,85 @@
+{% load static content %}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>第{{ paper.edition }}届 {{ paper.title }}{% if show_answers %}（含答案）{% endif %}</title>
+  <link rel="stylesheet" href="{% static 'katex.min.css' %}">
+  <style>
+    :root { color-scheme: light; }
+    body {
+      font-family: "Times New Roman", "Songti SC", "SimSun", serif;
+      color: #111; background: #fff;
+      margin: 0 auto; max-width: 760px; padding: 24px 8px;
+    }
+    .paper-header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 8px; }
+    .paper-meta { font-size: 13px; color: #333; margin: 0 0 4px; }
+    .paper-title { font-size: 22px; font-weight: 700; margin: 0; }
+    .notice { font-size: 12px; color: #666; margin-top: 6px; }
+    .question { margin: 26px 0 34px; page-break-inside: avoid; }
+    .question-head { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .q-type { color: #444; font-weight: 400; }
+    .stem { font-size: 14px; line-height: 1.9; }
+    .answer-space { height: 110px; border-bottom: 1px dotted #888; margin-top: 18px; }
+    .answer, .answer-area { margin-top: 14px; font-size: 14px; line-height: 1.9; }
+    .answer-label, .kps { font-size: 13px; margin: 0; }
+    .answer-label { font-weight: 700; }
+    .kps { color: #555; margin-top: 4px; }
+    .toolbar { position: sticky; top: 0; z-index: 10; display: flex; gap: 10px; justify-content: flex-end; }
+    .toolbar a, .toolbar button {
+      font: 13px/1.4 sans-serif; text-decoration: none; cursor: pointer;
+      border: 1px solid #999; background: #f3f3f3; color: #111;
+      border-radius: 4px; padding: 5px 14px;
+    }
+    @media print {
+      .toolbar { display: none !important; }
+      @page { size: A4; margin: 18mm 16mm; }
+      body { max-width: none; padding: 0; }
+      summary { list-style: none; }
+    }
+    .math { overflow-x: auto; }
+    mjx-container { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <a href="?answers=1">带答案打印</a>
+    <a href="?">仅题目打印</a>
+    <button type="button" data-print>打印 / 存为 PDF</button>
+  </div>
+
+  <header class="paper-header">
+    <p class="paper-meta">第{{ paper.edition }}届 · {{ paper.get_stage_display }} · {{ paper.original_category_label }}</p>
+    <h1 class="paper-title">{{ paper.title }}</h1>
+    {% if show_answers %}
+      <p class="notice">本页面含答案与解析；如需作答留白版请点上方「仅题目打印」。</p>
+    {% else %}
+      <p class="notice">答案见解析版（打印此页后点「含答案打印」）。</p>
+    {% endif %}
+  </header>
+
+  {% for question in questions %}
+  <section class="question">
+    <p class="question-head">第{{ question.question_no }}题 <span class="q-type">（{{ question.get_question_type_display }}）</span></p>
+    <div class="content">{{ question.stem_md|render_markdown }}</div>
+    {% if show_answers %}
+      <div class="answer-area">
+        {% if question.answer_md %}<p class="answer-label">答案：</p><div class="answer">{{ question.answer_md|render_markdown }}</div>{% endif %}
+        <p class="answer-label" style="margin-top:12px">解析：</p>
+        <div class="answer">{{ question.solution_md|render_markdown }}</div>
+      </div>
+    {% else %}
+      <div class="answer-space"></div>
+      <p class="kps">知识点：{% for point in question.knowledge_points.all %}{{ point.name }}{% if not forloop.last %}、{% endif %}{% endfor %}</p>
+    {% endif %}
+  </section>
+  {% empty %}
+  <p>这份试卷还没有可打印的题目。</p>
+  {% endfor %}
+
+  <script defer src="{% static 'katex.min.js' %}"></script>
+  <script defer src="{% static 'contrib/auto-render.min.js' %}"></script>
+  <script defer src="{% static 'js/math.js' %}"></script>
+  <script defer src="{% static 'js/print-button.js' %}"></script>
+</body>
+</html>

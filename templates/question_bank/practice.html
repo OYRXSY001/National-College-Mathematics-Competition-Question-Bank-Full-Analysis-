@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+{% load content %}
+{% block title %}练习{% if label %} · {{ label }}{% endif %}{% endblock %}
+
+{% block extra_js %}
+<script defer src="{% static 'js/practice.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container site-container py-4" style="max-width: 880px;">
+  <!-- 顶栏：范围 + 进度 + 退出 -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+      <h1 class="h4 mb-0">{{ label }}</h1>
+      <span class="small text-muted">{{ request.user.username }} 的刷题现场</span>
+      <span class="small text-muted ms-2">快捷键 1✓ 2✗ 3跳过</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      {% if index and not done and total %}
+        <span class="badge text-bg-light border">第 {{ index }} / {{ total }} 题</span>
+      {% endif %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ exit_url }}">退出练习</a>
+    </div>
+  </div>
+
+  {% if resumed_index and not done %}
+    <div class="alert alert-secondary py-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>↺ 已从上次进度继续（第 {{ resumed_index }} / {{ total }} 题）</span>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'practice' %}?scope={{ scope }}&fresh=1">从头开始</a>
+    </div>
+  {% endif %}
+
+  {% if done %}
+    <div class="question-card p-4 text-center">
+      <div class="display-6 mb-2">🎯</div>
+      <p class="mb-1">本范围练习完成</p>
+      <p class="small text-muted mb-3">
+        {% if outcome == "correct" %}最后一题回答正确。{% elif outcome == "wrong" %}最后一题已记入错题本。{% else %}本范围全部刷完。{% endif %}
+      </p>
+      <div class="d-flex justify-content-center gap-2 flex-wrap">
+        <a class="btn btn-primary" href="{% url 'practice' %}{% if scope %}?scope={{ scope }}{% endif %}">再刷一遍</a>
+        <a class="btn btn-outline-secondary" href="{{ exit_url }}">返回试题库</a>
+      </div>
+    </div>
+  {% elif empty %}
+    <div class="question-card p-4 text-center">
+      <div class="display-6 mb-2">📭</div>
+      <p class="mb-1">当前范围暂无题目</p>
+      <p class="small text-muted mb-3">可以先去练习产生错题，再回来巩固，或换个范围试试。</p>
+      <a class="btn btn-outline-secondary" href="{{ exit_url }}">返回</a>
+    </div>
+  {% else %}
+
+    {% if outcome %}
+      {% if outcome == "correct" %}
+        <div class="alert alert-success py-2">✔ 回答正确！</div>
+      {% elif outcome == "wrong" %}
+        <div class="alert alert-danger py-2">✘ 已记入错题本（累计答错 {{ wrong_count }} 次）</div>
+      {% else %}
+        <div class="alert alert-secondary py-2">已跳过本题</div>
+      {% endif %}
+    {% endif %}
+
+    <article class="question-card p-3 p-md-4" id="question-{{ question.pk }}">
+      <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+        <a class="small text-muted" href="{% url 'paper-detail' question.paper.pk %}">
+          {{ question.paper.title }} · 第{{ question.question_no }}题
+        </a>
+        <span class="badge text-bg-light">{{ question.get_question_type_display }}</span>
+      </div>
+
+      <div class="question-content">
+        {{ question.stem_md|render_markdown }}
+      </div>
+
+      {% if question.knowledge_points.all %}
+        <div class="mt-2 mb-3">
+          {% for point in question.knowledge_points.all %}
+            <span class="badge rounded-pill text-bg-secondary me-1">{{ point.name }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <details class="mt-3"{% if outcome %} open{% endif %}>
+        <summary class="btn btn-sm btn-outline-primary">查看答案与解析</summary>
+        <div class="mt-3 p-3 holo-answer">
+          <div class="small fw-bold text-success">答案</div>
+          <div class="mb-2">{{ question.answer_md|render_markdown }}</div>
+          <div class="small fw-bold text-primary">解析</div>
+          <div>{{ question.solution_md|render_markdown }}</div>
+        </div>
+      </details>
+
+      <div class="mt-3">
+        {% if outcome %}
+          <div class="d-flex justify-content-end">
+{% if next_qid %}
+              <a id="next-question" class="btn btn-primary"
+                 href="{% url 'practice' %}?qid={{ next_qid }}{% if scope %}&scope={{ scope }}{% endif %}">下一题 →</a>
+            {% else %}
+              <a class="btn btn-primary" href="{% url 'practice' %}?done=1{% if scope %}&scope={{ scope }}{% endif %}{% if outcome %}&outcome={{ outcome }}{% endif %}">完成练习</a>
+            {% endif %}
+          </div>
+        {% else %}
+          <form method="post" action="{% url 'practice-verdict' %}" class="d-flex gap-2 flex-wrap">
+            {% csrf_token %}
+            <input type="hidden" name="qid" value="{{ question.pk }}">
+            <input type="hidden" name="scope" value="{{ scope }}">
+            <button class="btn btn-success flex-fill" type="submit" name="result" value="correct">✔ 答对了 <kbd>1</kbd></button>
+            <button class="btn btn-outline-danger flex-fill" type="submit" name="result" value="wrong">✘ 答错了 <kbd>2</kbd></button>
+            <button class="btn btn-outline-secondary flex-fill" type="submit" name="result" value="skip">跳过 <kbd>3</kbd></button>
+          </form>
+        {% endif %}
+      </div>
+    </article>
+  {% endif %}
+</div>
+{% endblock %}

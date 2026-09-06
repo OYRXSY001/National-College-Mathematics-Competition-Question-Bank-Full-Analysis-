@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load content %}
+{% block title %}成绩单 · {{ attempt.paper.title }}{% endblock %}
+
+{% block content %}
+<div class="container site-container py-4" style="max-width: 960px;">
+  <header class="paper-header mb-3">
+    <p class="paper-meta">第{{ attempt.paper.edition }}届 · {{ attempt.paper.get_stage_display }} · {{ attempt.paper.original_category_label }}</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <h1 class="h3 mb-0">📊 成绩单 · {{ attempt.paper.title }}</h1>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'paper-detail' attempt.paper.pk %}">返回试卷</a>
+    </div>
+  </header>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-3 col-6"><div class="question-card p-3 text-center"><div class="display-6 fw-bold">{{ achieved }}<span class="small"> / {{ total }}</span></div><div class="small text-muted">自评总分</div></div></div>
+    <div class="col-md-3 col-6"><div class="question-card p-3 text-center"><div class="display-6 fw-bold">{{ accuracy }}<span class="small">%</span></div><div class="small text-muted">得分率</div></div></div>
+    <div class="col-md-3 col-6"><div class="question-card p-3 text-center"><div class="display-6 fw-bold">{{ correct_count }}<span class="small"> / {{ questions|length }}</span></div><div class="small text-muted">答对题数</div></div></div>
+    <div class="col-md-3 col-6"><div class="question-card p-3 text-center"><div class="display-6 fw-bold">{% if attempt.finished_at %}{{ attempt.finished_at|date:"m-d H:i" }}{% else %}—{% endif %}</div><div class="small text-muted">交卷时间</div></div></div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="question-card p-3 h-100">
+        <h2 class="h6 mb-2">按题型得分</h2>
+        {% for item in by_type %}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small"><span>{{ item.label }}</span><span>{{ item.achieved }} / {{ item.total }}（{{ item.percent }}%）</span></div>
+            <div class="progress" style="height: 6px;"><div class="progress-bar" style="width: {{ item.percent }}%;"></div></div>
+          </div>
+        {% empty %}<p class="small text-muted mb-0">暂无数据</p>{% endfor %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="question-card p-3 h-100">
+        <h2 class="h6 mb-2">按知识点得分</h2>
+        {% for item in by_kp %}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small"><span>{{ item.name }}</span><span>{{ item.achieved }} / {{ item.total }}（{{ item.percent }}%）</span></div>
+            <div class="progress" style="height: 6px;"><div class="progress-bar" style="width: {{ item.percent }}%;"></div></div>
+          </div>
+        {% empty %}<p class="small text-muted mb-0">暂无数据</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <h2 class="h5 mb-2">逐题明细</h2>
+  {% for question in questions %}
+  <article class="question-card mb-3 p-3 p-md-4" id="q{{ question.pk }}">
+    <header class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+      <span class="badge {% if question.user_result == 'correct' %}text-bg-success{% elif question.user_result == 'wrong' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">
+        {% if question.user_result == 'correct' %}✔ 答对{% elif question.user_result == 'wrong' %}✘ 答错{% else %}未作答{% endif %}
+      </span>
+      <span class="small text-muted">第 {{ forloop.counter }} 题 · {{ question.get_question_type_display }}{% if question.score %} · {{ question.score }} 分{% endif %}</span>
+    </header>
+    <div class="question-content">{{ question.stem_md|render_markdown }}</div>
+    <details class="mt-3">
+      <summary class="btn btn-sm btn-outline-primary">查看答案与解析</summary>
+      <div class="mt-3 p-3 holo-answer">
+        <div class="small fw-bold text-success">答案</div>
+        <div class="mb-2">{{ question.answer_md|render_markdown }}</div>
+        <div class="small fw-bold text-primary">解析</div>
+        <div>{{ question.solution_md|render_markdown }}</div>
+      </div>
+    </details>
+  </article>
+  {% endfor %}
+
+  <div class="d-flex justify-content-center gap-2 my-4">
+    <form method="post" action="{% url 'exam-start' attempt.paper.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">再考一次</button>
+    </form>
+    <a class="btn btn-outline-primary" href="{% url 'practice' %}?scope=paper:{{ attempt.paper.pk }}">按本卷逐题练习</a>
+  </div>
+</div>
+{% endblock %}

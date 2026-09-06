@@ -1,9 +1,15 @@
 {% load content %}
 <article class="question-card p-3 p-md-4 mb-3" id="question-{{ question.pk }}">
   <header class="d-flex flex-wrap justify-content-between gap-2 mb-3">
-    <div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
       <a class="fw-semibold" href="{% url 'question-detail' question.pk %}">第{{ question.question_no }}题</a>
       <span class="badge text-bg-light">{{ question.get_question_type_display }}</span>
+      {% if question.wrong_count %}<span class="badge text-bg-danger" title="最近答错于 {{ question.last_wrong_at|date:'Y-m-d H:i' }}">已答错 {{ question.wrong_count }} 次</span>{% endif %}
+      {% if question.next_review_at and request.resolver_match.url_name == 'wrong-questions' %}
+        {% if question.next_review_at <= today %}<span class="badge text-bg-warning">⏰ 今天要复习</span>
+        {% else %}<span class="badge text-bg-light border">🔁 复习排期 {{ question.next_review_at|date:"m-d" }}</span>{% endif %}
+      {% endif %}
+      {% if question.has_note %}<span class="badge text-bg-info">📝 已记笔记</span>{% endif %}
     </div>
     <a class="small" href="{% url 'paper-detail' question.paper.pk %}">{{ question.paper.title }}</a>
   </header>
@@ -24,6 +30,12 @@
       <form method="post" action="{% if question.is_wrong %}{% url 'wrong-remove' question.pk %}{% else %}{% url 'wrong-add' question.pk %}{% endif %}">
         {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline-danger" type="submit">{% if question.is_wrong %}移出错题本{% else %}加入错题本{% endif %}</button>
       </form>
+      {% if question.is_wrong and request.resolver_match.url_name == 'wrong-questions' %}
+        <form method="post" action="{% url 'wrong-toggle-mastered' question.pk %}">
+          {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-sm btn-outline-success" type="submit">{% if question.mastered_at %}已掌握 · 撤销{% else %}标记已掌握{% endif %}</button>
+        </form>
+      {% endif %}
+      <a class="btn btn-sm btn-outline-warning" href="{% url 'question-detail' question.pk %}#note-editor">{% if question.has_note %}编辑笔记{% else %}记笔记{% endif %}</a>
     {% else %}
       <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}">登录后收藏或加入错题本</a>
     {% endif %}

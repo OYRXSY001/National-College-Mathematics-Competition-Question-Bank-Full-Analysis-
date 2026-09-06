@@ -19,7 +19,7 @@ from question_bank.templatetags.content import render_markdown
 class PublicPageTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        reviewer = get_user_model().objects.create_user("view-reviewer")
+        cls.reviewer = get_user_model().objects.create_user("view-reviewer")
         cls.paper = Paper.objects.create(
             edition=17,
             stage="preliminary",
@@ -42,7 +42,7 @@ class PublicPageTests(TestCase):
             text_checked=True,
             formula_checked=True,
             solution_checked=True,
-            reviewed_by=reviewer,
+            reviewed_by=cls.reviewer,
             reviewed_at=timezone.now(),
             status=Question.Status.REVIEWED,
         )
@@ -57,6 +57,10 @@ class PublicPageTests(TestCase):
             original_category_label="非数学A类",
             title="未发布试卷",
         )
+
+    def setUp(self):
+        # 站点门禁启用后，所有页面请求都需要登录态。
+        self.client.force_login(self.reviewer)
 
     def test_home_and_paper_list_are_public(self):
         self.assertEqual(self.client.get(reverse("home")).status_code, 200)
@@ -202,9 +206,11 @@ class PublicPageTests(TestCase):
 
 class UserQuestionListTests(PublicPageTests):
     def setUp(self):
+        super().setUp()
         self.user = get_user_model().objects.create_user("collector", password="pass-12345")
 
     def test_anonymous_user_cannot_add_favorite(self):
+        self.client.logout()
         response = self.client.post(reverse("favorite-add", args=[self.question.pk]))
 
         self.assertEqual(response.status_code, 302)

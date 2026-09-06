@@ -5,6 +5,7 @@ from pathlib import Path
 from django.contrib import admin
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.forms import ModelForm
 from django.forms.models import BaseInlineFormSet
 from django.utils.html import format_html
 
@@ -17,6 +18,16 @@ from .models import (
     QuestionKnowledgePoint,
     WrongQuestion,
 )
+
+
+class QuestionKnowledgePointForm(ModelForm):
+    def clean(self):
+        cleaned = super().clean()
+        # 跳过模型约束预检：换主场景中旧主行与本行在同一表单集提交，
+        # 约束校验发生在保存之前（旧行尚未删除）必然误报。语义仍由
+        # formset.clean()（恰好一个主）与数据库约束（保存时先删后插）兜底。
+        self._validate_constraints = False
+        return cleaned
 
 
 class QuestionKnowledgeInlineFormSet(BaseInlineFormSet):
@@ -40,6 +51,7 @@ class QuestionKnowledgeInlineFormSet(BaseInlineFormSet):
 
 class QuestionKnowledgeInline(admin.TabularInline):
     model = QuestionKnowledgePoint
+    form = QuestionKnowledgePointForm
     formset = QuestionKnowledgeInlineFormSet
     extra = 0
 

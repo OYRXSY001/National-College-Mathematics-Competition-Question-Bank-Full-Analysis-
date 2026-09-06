@@ -47,7 +47,11 @@ def extract_formulas(markdown_text):
 
 
 def validate_markdown_formulas(items):
+    """返回 (issues, validator_ok)：issues 为公式定界符/语法问题列表；
+    validator_ok=False 表示 node 校验器不可用（缺失或超时），调用方应
+    将 KaTeX 校验降级为告警而不是阻断流程。"""
     issues = []
+    validator_ok = True
     formulas = []
     sources = []
 
@@ -63,7 +67,7 @@ def validate_markdown_formulas(items):
             sources.append(source)
 
     if not formulas:
-        return issues
+        return issues, validator_ok
 
     try:
         result = subprocess.run(
@@ -76,12 +80,12 @@ def validate_markdown_formulas(items):
             check=False,
             cwd=settings.BASE_DIR,
         )
-    except (OSError, subprocess.TimeoutExpired) as error:
-        return [*issues, f"KaTeX 校验器无法运行: {error}"]
+    except (OSError, subprocess.TimeoutExpired):
+        return issues, False
 
     if result.returncode != 0:
-        return [*issues, f"KaTeX 校验器退出码 {result.returncode}: {result.stderr.strip()}"]
+        return [*issues, f"KaTeX 校验器退出码 {result.returncode}: {result.stderr.strip()}"], validator_ok
 
     for error in json.loads(result.stdout or "[]"):
         issues.append(f"{sources[error['index']]}: {error['message']}")
-    return issues
+    return issues, validator_ok

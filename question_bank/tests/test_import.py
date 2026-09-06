@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -20,6 +21,22 @@ from question_bank.templatetags.content import render_markdown
 
 
 class QuestionBankImportTests(TestCase):
+    # 与本机是否安装 Node.js 解耦：模拟一个可用且判定公式合法的 KaTeX 校验器。
+    # 校验器自身的行为由本类内 patch 掉 subprocess.run 的用例覆盖。
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._validator_patch = patch(
+            "question_bank.katex.subprocess.run",
+            return_value=SimpleNamespace(returncode=0, stdout="[]", stderr=""),
+        )
+        cls._validator_patch.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._validator_patch.stop()
+        super().tearDownClass()
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
@@ -332,10 +349,40 @@ class QuestionBankImportTests(TestCase):
         self.write_workbook(inventory, INVENTORY_HEADERS, inventory_rows)
         self.write_workbook(questions, QUESTION_HEADERS, question_rows)
 
-        with self.assertRaises(CommandError):
-            call_command("import_question_bank", inventory=str(inventory), questions=str(questions))
+        # 模拟 KaTeX 对该公式的报错（真实校验由 node 脚本执行）
+        with patch(
+            "question_bank.katex.subprocess.run",
+            return_value=SimpleNamespace(
+                returncode=0,
+                stdout=r'[{"index":0,"message":"unclosed brace"}]',
+                stderr="",
+            ),
+        ):
+            with self.assertRaises(CommandError):
+                call_command(
+                    "import_question_bank", inventory=str(inventory), questions=str(questions)
+                )
 
         self.assertFalse(Paper.objects.exists())
+
+    def test_missing_node_degrades_to_warning_not_failure(self):
+        inventory_rows, question_rows = self.valid_rows()
+        inventory = self.root / "inventory.xlsx"
+        questions = self.root / "questions.xlsx"
+        self.write_workbook(inventory, INVENTORY_HEADERS, inventory_rows)
+        self.write_workbook(questions, QUESTION_HEADERS, question_rows)
+
+        with patch(
+            "question_bank.katex.subprocess.run",
+            side_effect=OSError("node not found"),
+        ):
+            call_command(
+                "import_question_bank", inventory=str(inventory), questions=str(questions)
+            )
+
+        # 校验器缺失只跳过公式语法校验，其余校验与写入照常
+        self.assertEqual(Paper.objects.count(), 1)
+        self.assertEqual(Question.objects.count(), 1)
 
     def test_fractional_integer_is_rejected(self):
         inventory_rows, question_rows = self.valid_rows()
@@ -414,7 +461,7 @@ class QuestionBankImportTests(TestCase):
 
         for text in invalid:
             with self.subTest(text=text):
-                self.assertTrue(validate_markdown_formulas([("stem", text)]))
+                self.assertTrue(validate_markdown_formulas([("stem", text)])[0])
 
         self.assertEqual(
             extract_formulas(r"\(x+1\) and \[y^2\]"),
@@ -427,8 +474,17 @@ class QuestionBankImportTests(TestCase):
         run.return_value.stdout = "[]"
         run.return_value.stderr = ""
 
-        self.assertEqual(validate_markdown_formulas([("stem", r"\(x+1\)")]), [])
+        issues, validator_ok = validate_markdown_formulas([("stem", r"\(x+1\)")])
+        self.assertEqual(issues, [])
+        self.assertTrue(validator_ok)
         self.assertEqual(run.call_args.kwargs["encoding"], "utf-8")
+
+    @patch("question_bank.katex.subprocess.run")
+    def test_unavailable_validator_is_reported_not_fatal(self, run):
+        run.side_effect = OSError("node not found")
+        issues, validator_ok = validate_markdown_formulas([("stem", r"\(x+1\)")])
+        self.assertEqual(issues, [])
+        self.assertFalse(validator_ok)
 
     def test_reversed_formula_delimiters_roll_back_whole_import(self):
         inventory_rows, question_rows = self.valid_rows()

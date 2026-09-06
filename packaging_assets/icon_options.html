@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #17171f; font-family: "Microsoft YaHei", sans-serif; padding: 28px; }
+  .sheet { display: grid; grid-template-columns: repeat(5, 256px); gap: 26px 30px; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .label { color: #9aa0b5; font-size: 15px; letter-spacing: 1px; }
+  .label b { color: #e8e9f2; margin-right: 8px; font-size: 17px; }
+
+  .icon {
+    width: 256px; height: 256px; position: relative; overflow: hidden;
+    border-radius: 56px;  /* Windows 图标惯用的圆角方 */
+  }
+
+  /* ---------- A ∑ 渐变环（启动画面同族） ---------- */
+  .a { background: radial-gradient(circle at 50% 42%, #1b2452 0%, #0B0F26 70%);
+       display: flex; align-items: center; justify-content: center; }
+  .a::before { /* 网格 */
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 32px);
+  }
+  .a .ring { position: absolute; width: 150px; height: 150px; border-radius: 50%;
+    background: conic-gradient(from 210deg, #8F7BFF, #FF6EC7 55%, #3E3A7A 80%, #8F7BFF);
+    -webkit-mask: radial-gradient(circle, transparent 68px, #000 70px);
+            mask: radial-gradient(circle, transparent 68px, #000 70px); }
+  .a .sig { position: relative; font-family: "Cambria Math", serif; font-size: 108px; font-weight: 700;
+    color: #F0EEFF; text-shadow: 0 0 26px rgba(143,123,255,.65); transform: translateY(-4px); }
+
+  /* ---------- B 大 π ---------- */
+  .b { background: linear-gradient(145deg, #7C6CFF 0%, #B85CE0 55%, #FD6EA8 100%);
+       display: flex; align-items: center; justify-content: center; }
+  .b .g { font-family: "Cambria Math", serif; font-style: italic; font-weight: 700;
+    font-size: 168px; color: #fff; text-shadow: 0 6px 22px rgba(60,20,90,.45); transform: translateY(-8px); }
+
+  /* ---------- C ∞ 莫比乌斯 ---------- */
+  .c { background: linear-gradient(160deg, #0B0F26, #1A1F4D); display: flex; align-items: center; justify-content: center; }
+  .c .g { font-family: "Cambria Math", serif; font-weight: 700; font-size: 190px; line-height: 1;
+    background: linear-gradient(120deg, #8F7BFF 20%, #FF6EC7 70%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    transform: translateY(-10px); filter: drop-shadow(0 0 18px rgba(143,123,255,.45)); }
+
+  /* ---------- D ∫ 积分 ---------- */
+  .d { background: linear-gradient(150deg, #241A5E, #0E1030); display: flex; align-items: center; justify-content: center; }
+  .d .g { font-family: "Cambria Math", serif; font-style: italic; font-size: 190px; color: #EDEBFF;
+    text-shadow: 0 0 24px rgba(143,123,255,.55); transform: translateY(-6px); }
+  .d .dx { position: absolute; right: 44px; bottom: 52px; font-family: "Cambria Math", serif; font-style: italic;
+    font-size: 40px; color: #FF6EC7; }
+
+  /* ---------- E 翻开的书 + ∑ ---------- */
+  .e { background: linear-gradient(160deg, #101538, #0B0F26); }
+  .e .book { position: absolute; left: 50%; top: 56%; transform: translate(-50%, -50%); width: 180px; height: 116px; }
+  .e .page { position: absolute; top: 0; width: 86px; height: 110px; background: linear-gradient(180deg, #F4F3FF, #CFCBEE); }
+  .e .page.l { left: 0;  border-radius: 14px 4px 4px 14px; transform: skewY(6deg); }
+  .e .page.r { right: 0; border-radius: 4px 14px 14px 4px; transform: skewY(-6deg); }
+  .e .line { position: absolute; height: 6px; border-radius: 3px; background: #9B93D8; }
+  .e .l1 { left: 12px; top: 26px; width: 58px; } .e .l2 { left: 12px; top: 48px; width: 44px; }
+  .e .l3 { right: 12px; top: 26px; width: 58px; } .e .l4 { right: 12px; top: 48px; width: 44px; }
+  .e .badge { position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
+    width: 92px; height: 92px; border-radius: 50%;
+    background: linear-gradient(135deg, #8F7BFF, #FF6EC7);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 22px rgba(0,0,0,.45); border: 5px solid #101538; }
+  .e .badge span { font-family: "Cambria Math", serif; font-weight: 700; font-size: 58px; color: #fff; }
+
+  /* ---------- F 奖杯 Σ ---------- */
+  .f { background: linear-gradient(160deg, #14183B, #0B0F26); display: flex; align-items: center; justify-content: center; }
+  .f .cup { position: relative; width: 140px; height: 108px; }
+  .f .bowl { width: 140px; height: 92px; border-radius: 12px 12px 64px 64px;
+    background: linear-gradient(180deg, #FFD98A, #F5A623 70%, #D98A1F); position: relative; }
+  .f .bowl span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: "Cambria Math", serif; font-weight: 700; font-size: 62px; color: #5C3A00; }
+  .f .stem { width: 22px; height: 26px; background: #D98A1F; margin: 0 auto; }
+  .f .base { width: 84px; height: 16px; border-radius: 6px; background: #F5C15C; margin: 0 auto; }
+  .f .handle { position: absolute; top: 8px; width: 34px; height: 58px; border: 12px solid #F5A623; border-radius: 20px; }
+  .f .hl { left: -30px; border-right: none; } .f .hr { right: -30px; border-left: none; }
+  .f .star { position: absolute; top: 18px; right: 26px; color: #FF6EC7; font-size: 44px; text-shadow: 0 0 14px rgba(255,110,199,.8); }
+
+  /* ---------- G 题卡堆叠 ---------- */
+  .g-i { background: linear-gradient(150deg, #6C5CE7, #4834B8); }
+  .g-i .card { position: absolute; left: 50%; width: 168px; height: 118px; border-radius: 18px;
+    background: #F7F6FF; box-shadow: 0 8px 20px rgba(20,10,60,.35); }
+  .g-i .c3 { top: 108px; transform: translateX(-50%) rotate(-5deg); opacity: .55; }
+  .g-i .c2 { top: 92px;  transform: translateX(-50%) rotate(3deg);  opacity: .8; }
+  .g-i .c1 { top: 74px;  transform: translateX(-50%); }
+  .g-i .ok { position: absolute; left: 24px; top: 30px; width: 34px; height: 18px;
+    border-left: 9px solid #2EB872; border-bottom: 9px solid #2EB872; transform: rotate(-45deg) translateY(-4px); border-radius: 3px; }
+  .g-i .no { position: absolute; right: 26px; top: 26px; font-size: 46px; font-weight: 700; color: #E85A71; line-height: 1; }
+  .g-i .ln { position: absolute; height: 9px; border-radius: 5px; background: #C9C4EC; left: 24px; }
+  .g-i .n1 { top: 74px; width: 116px; } .g-i .n2 { top: 92px; width: 84px; }
+
+  /* ---------- H 白底极简 ∑（Win11 风） ---------- */
+  .h { background: #FAFAFC; display: flex; align-items: center; justify-content: center;
+       box-shadow: inset 0 0 0 3px #E6E6EF; }
+  .h .g { font-family: "Cambria Math", serif; font-weight: 700; font-size: 150px;
+    background: linear-gradient(135deg, #6C5CE7, #E84393);
+    -webkit-background-clip: text; background-clip: text; color: transparent; transform: translateY(-6px); }
+  .h .dot { position: absolute; right: 52px; bottom: 52px; width: 26px; height: 26px; border-radius: 50%;
+    background: linear-gradient(135deg, #6C5CE7, #E84393); }
+
+  /* ---------- I 坐标曲线 ---------- */
+  .i { background: linear-gradient(160deg, #0E1228, #101A3C); }
+  .i svg { position: absolute; inset: 0; }
+
+  /* ---------- J √ 根号对勾 ---------- */
+  .j { background: linear-gradient(145deg, #1FA2A6 0%, #12726F 60%, #0D4F52 100%);
+       display: flex; align-items: center; justify-content: center; }
+  .j .g { font-family: "Cambria Math", serif; font-weight: 700; font-size: 168px; color: #F2FFFB;
+    text-shadow: 0 6px 20px rgba(0,40,40,.5); transform: translateY(-6px); }
+  .j .x2 { position: absolute; right: 56px; bottom: 58px; font-family: "Cambria Math", serif; font-style: italic;
+    font-size: 44px; color: #B7F5E7; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="cell"><div class="icon a"><div class="ring"></div><div class="sig">Σ</div></div>
+    <div class="label"><b>A</b>∑ 渐变环 · 品牌同族</div></div>
+
+  <div class="cell"><div class="icon b"><div class="g">π</div></div>
+    <div class="label"><b>B</b>大 π · 圆融渐变</div></div>
+
+  <div class="cell"><div class="icon c"><div class="g">∞</div></div>
+    <div class="label"><b>C</b>∞ 莫比乌斯 · 无限刷题</div></div>
+
+  <div class="cell"><div class="icon d"><div class="g">∫</div><div class="dx">dx</div></div>
+    <div class="label"><b>D</b>∫ 积分 · 极简符号</div></div>
+
+  <div class="cell"><div class="icon e">
+    <div class="book">
+      <div class="page l"></div><div class="page r"></div>
+      <div class="line l1"></div><div class="line l2"></div>
+      <div class="line l3"></div><div class="line l4"></div>
+    </div>
+    <div class="badge"><span>Σ</span></div>
+  </div><div class="label"><b>E</b>书页 + Σ · 题库具象</div></div>
+
+  <div class="cell"><div class="icon f">
+    <div class="cup">
+      <div class="handle hl"></div><div class="handle hr"></div>
+      <div class="bowl"><span>Σ</span></div>
+      <div class="stem"></div><div class="base"></div>
+    </div>
+    <div class="star">✦</div>
+  </div><div class="label"><b>F</b>奖杯 Σ · 竞赛夺冠</div></div>
+
+  <div class="cell"><div class="icon g-i">
+    <div class="card c3"></div><div class="card c2"></div>
+    <div class="card c1">
+      <div class="ok"></div><div class="no">✗</div>
+      <div class="ln n1"></div><div class="ln n2"></div>
+    </div>
+  </div><div class="label"><b>G</b>题卡堆叠 · 对错判题</div></div>
+
+  <div class="cell"><div class="icon h"><div class="g">Σ</div><div class="dot"></div></div>
+    <div class="label"><b>H</b>白底极简 · Win11 风</div></div>
+
+  <div class="cell"><div class="icon i">
+    <svg viewBox="0 0 256 256">
+      <defs>
+        <linearGradient id="curve" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#8F7BFF"/><stop offset="1" stop-color="#FF6EC7"/>
+        </linearGradient>
+      </defs>
+      <line x1="52" y1="36" x2="52" y2="216" stroke="#8A90B8" stroke-width="7" stroke-linecap="round"/>
+      <line x1="36" y1="200" x2="222" y2="200" stroke="#8A90B8" stroke-width="7" stroke-linecap="round"/>
+      <path d="M 64 180 Q 128 -20 206 172" fill="none" stroke="url(#curve)" stroke-width="13" stroke-linecap="round"/>
+      <circle cx="64" cy="180" r="12" fill="#8F7BFF"/>
+      <circle cx="206" cy="172" r="12" fill="#FF6EC7"/>
+    </svg>
+  </div><div class="label"><b>I</b>坐标曲线 · 函数图像</div></div>
+
+  <div class="cell"><div class="icon j"><div class="g">√</div><div class="x2">x²</div></div>
+    <div class="label"><b>J</b>√ 根号 · 答对验证</div></div>
+
+</div>
+</body>
+</html>

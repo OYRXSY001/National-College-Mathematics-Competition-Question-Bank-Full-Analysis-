@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 640px; height: 400px; overflow: hidden; }
+  body {
+    position: relative;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background:
+      radial-gradient(circle at 320px 148px, rgba(124,108,255,.20), transparent 190px),
+      linear-gradient(180deg, #0B0F26 0%, #121A3E 58%, #0C1230 100%);
+  }
+  /* 细网格 */
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.028) 0 1px, transparent 1px 40px);
+  }
+  /* 散落的公式点缀 */
+  .fx { position: absolute; font-family: "Cambria Math", "Times New Roman", serif; font-style: italic; color: rgba(190,188,255,.10); user-select: none; white-space: nowrap; }
+  .fx1 { left: 52px;  top: 66px;  font-size: 22px; transform: rotate(-8deg); }
+  .fx2 { left: 470px; top: 78px;  font-size: 18px; transform: rotate(6deg); }
+  .fx3 { left: 64px;  top: 296px; font-size: 19px; transform: rotate(5deg); }
+  .fx4 { left: 486px; top: 306px; font-size: 21px; transform: rotate(-6deg); }
+  .fx5 { left: 556px; top: 190px; font-size: 15px; }
+  .fx6 { left: 30px;  top: 190px; font-size: 15px; }
+  /* 顶部高光弧线 */
+  .arc-top {
+    position: absolute; left: 170px; top: -220px; width: 300px; height: 300px;
+    border-radius: 50%; border: 1px solid rgba(143,123,255,.16);
+  }
+  /* 徽标 */
+  .emblem { position: absolute; left: 320px; top: 148px; transform: translate(-50%,-50%); }
+  .ring {
+    width: 92px; height: 92px; border-radius: 50%;
+    background: conic-gradient(from 210deg, #8F7BFF, #FF6EC7 55%, #3E3A7A 78%, #8F7BFF);
+    -webkit-mask: radial-gradient(circle, transparent 43px, #000 44px);
+            mask: radial-gradient(circle, transparent 43px, #000 44px);
+    opacity: .9;
+  }
+  .sigma {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-52%);
+    font-size: 40px; font-weight: 700; color: #ECEAFF;
+    font-family: "Cambria Math", "Times New Roman", serif;
+    text-shadow: 0 0 18px rgba(143,123,255,.55);
+  }
+  /* 预览专用：运行时由 Tcl 绘制的动态元素（生成 PNG 时隐藏） */
+  .live { position: absolute; }
+  #spinA { left: 264px; top: 92px;  width: 112px; height: 112px; border-radius: 50%; border: 3px solid transparent; border-top-color: #8F7BFF; transform: rotate(-30deg); filter: drop-shadow(0 0 6px rgba(143,123,255,.7)); }
+  #spinB { left: 256px; top: 84px;  width: 128px; height: 128px; border-radius: 50%; border: 2px solid transparent; border-bottom-color: #FF6EC7; transform: rotate(40deg); opacity: .8; }
+  #bar   { left: 36px;  top: 343px; width: 80px;  height: 5px;  border-radius: 3px; background: linear-gradient(90deg, rgba(159,139,255,0), #9F8BFF 30%, #E9E4FF 55%, rgba(233,228,255,0)); filter: drop-shadow(0 0 5px rgba(143,123,255,.8)); }
+  /* 标题区 */
+  .title {
+    position: absolute; left: 0; right: 0; top: 232px; text-align: center;
+    font-size: 30px; font-weight: 700; letter-spacing: 6px; color: #F2F1FF;
+    text-shadow: 0 2px 14px rgba(10,14,38,.8);
+  }
+  .subtitle {
+    position: absolute; left: 0; right: 0; top: 282px; text-align: center;
+    font-size: 13px; letter-spacing: 3px; color: #8E96C8;
+  }
+  .subtitle b { color: #B9AFFF; font-weight: 600; }
+  /* 底部进度轨道（烘焙进 PNG 的静态部分） */
+  .track {
+    position: absolute; left: 32px; top: 345px; width: 576px; height: 3px;
+    border-radius: 2px; background: #262D58;
+  }
+  .brand {
+    position: absolute; right: 32px; top: 366px; font-size: 10px;
+    letter-spacing: 2px; color: rgba(142,150,200,.55);
+  }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="arc-top"></div>
+  <span class="fx fx1">∫₀<sup>∞</sup> f(x)dx</span>
+  <span class="fx fx2">e<sup>iπ</sup> + 1 = 0</span>
+  <span class="fx fx3">∑ 1/n² = π²/6</span>
+  <span class="fx fx4">lim θ→0 sinθ/θ = 1</span>
+  <span class="fx fx5">√2 ∈ ℝ</span>
+  <span class="fx fx6">A = πr²</span>
+
+  <div class="emblem">
+    <div class="ring"></div>
+    <div class="sigma">∑</div>
+  </div>
+  <div class="live" id="spinB"></div>
+  <div class="live" id="spinA"></div>
+
+  <div class="title">全国大学生数学竞赛题库</div>
+  <div class="subtitle">第 <b>1–17</b> 届真题 · 智能刷题 · 错题复习</div>
+
+  <div class="track"></div>
+  <div class="live" id="bar"></div>
+  <div class="brand">MATHEMATICS COMPETITION BANK</div>
+</body>
+</html>

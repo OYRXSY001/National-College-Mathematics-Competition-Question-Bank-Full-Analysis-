@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load content %}
 {% block content %}
 <section class="hero-section">
   <p class="hero-subtitle">第 1 — 17 届 · 非数学 A 类</p>
@@ -18,6 +19,57 @@
     <a class="btn btn-outline-primary" href="{% url 'paper-list' %}?stage=final">决赛真题</a>
   </div>
 </section>
+
+{% if daily_question %}
+<section class="daily-question-section" aria-labelledby="daily-question-title">
+  <h2 id="daily-question-title">每日一题</h2>
+  <article class="question-card p-3 p-md-4">
+    <header class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+      <span class="badge text-bg-primary">今日题目</span>
+      <span class="badge text-bg-light">{{ daily_question.get_question_type_display }}</span>
+      <a class="small" href="{% url 'paper-detail' daily_question.paper.pk %}">{{ daily_question.paper.title }}</a>
+    </header>
+    <div class="question-content">{{ daily_question.stem_md|render_markdown }}</div>
+    <div class="d-flex flex-wrap gap-2 my-3">
+      {% for point in daily_question.knowledge_points.all %}<span class="badge rounded-pill text-bg-secondary">{{ point.name }}</span>{% endfor %}
+    </div>
+    <a class="btn btn-primary" href="{% url 'practice' %}?qid={{ daily_question.pk }}">去做这一题 →</a>
+  </article>
+</section>
+{% endif %}
+
+{% if user.is_authenticated %}
+<section class="daily-question-section" aria-labelledby="today-tasks-title">
+  <h2 id="today-tasks-title">今日任务</h2>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="question-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h3 class="h6 mb-0">🔁 错题复习</h3>
+          {% if due_count %}<span class="badge text-bg-danger">{{ due_count }} 题待复习</span>{% endif %}
+        </div>
+        <p class="small text-muted mb-3">按记忆曲线推送已到期的错题，答对 4 次自动掌握。</p>
+        <a class="btn btn-sm btn-primary" href="{% url 'practice' %}?scope=review">
+          {% if due_count %}开始复习今日 {{ due_count }} 题{% else %}查看待复习{% endif %}
+        </a>
+        {% if pending_wrong %}<a class="btn btn-sm btn-outline-secondary ms-1" href="{% url 'wrong-questions' %}">错题本（{{ pending_wrong }}）</a>{% endif %}
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="question-card p-3 h-100">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="h6 mb-0">🧠 智能组卷</span>
+        </div>
+        <p class="small text-muted mb-3">按答错最多的知识点抽 10–15 题，专攻薄弱环节。</p>
+        <a class="btn btn-sm btn-primary" href="{% url 'practice' %}?scope=weak">开始智能组卷</a>
+        {% if progress %}
+          <a class="btn btn-sm btn-outline-primary ms-1" href="{% url 'practice' %}?scope={{ progress.scope }}">继续上次练习</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <section class="edition-section" aria-labelledby="edition-title">
   <h2 id="edition-title">按 届 数 查 看</h2>

@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 MAX_PDF_BYTES = 50 * 1024 * 1024
@@ -250,11 +251,130 @@ class WrongQuestion(models.Model):
         Question, on_delete=models.CASCADE, related_name="marked_wrong_by"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    wrong_count = models.PositiveSmallIntegerField(default=1)
+    last_wrong_at = models.DateTimeField(default=timezone.now)
+    mastered_at = models.DateTimeField(null=True, blank=True)
+    # 间隔复习排期：stage 0-3 → 答对推进；stage 到 4 自动掌握
+    review_stage = models.PositiveSmallIntegerField(default=0)
+    next_review_at = models.DateField(null=True, blank=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["-last_wrong_at"]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "question"], name="unique_user_wrong_question"
+            )
+        ]
+
+
+class Note(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notes"
+    )
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="notes"
+    )
+    body = models.TextField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "question"], name="unique_user_note")
+        ]
+
+
+class AnswerRecord(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="answer_records"
+    )
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="answer_records"
+    )
+    is_correct = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "created_at"]),
+        ]
+
+
+class PracticeProgress(models.Model):
+    """练习进度断点：用户在某练习范围内做到第几题，下次可续刷。"""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="practice_progress",
+    )
+    # 最长 scope 形如 "knowledge:<slug>"（slug 最长 100），SQLite 不强制长度
+    # 但 PostgreSQL 会，预留到 150
+    scope = models.CharField(max_length=150)
+    position = models.PositiveSmallIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "scope"], name="unique_user_practice_scope"
+            )
+        ]
+
+
+class ExamAttempt(models.Model):
+    """模拟考试：整卷限时作答，交卷后自评判分生成成绩单。"""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="exam_attempts"
+    )
+    paper = models.ForeignKey(
+        Paper, on_delete=models.CASCADE, related_name="exam_attempts"
+    )
+    started_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    self_score = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    total_score = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True
+    )
+
+    class Meta:
+        ordering = ["-started_at"]
+        constraints = [
+            # 同一张试卷同时只有一场未完成考试（并发双击 start 也只建一场）
+            models.UniqueConstraint(
+                fields=["user", "paper"],
+                condition=models.Q(finished_at__isnull=True),
+                name="unique_active_exam_per_paper",
+            )
+        ]
+
+
+class ExamAnswer(models.Model):
+    """考试中每道题的自评结果。"""
+
+    class Result(models.TextChoices):
+        CORRECT = "correct", "答对"
+        WRONG = "wrong", "答错"
+        UNANSWERED = "unanswered", "未作答"
+
+    attempt = models.ForeignKey(
+        ExamAttempt, on_delete=models.CASCADE, related_name="answers"
+    )
+    question = models.ForeignKey(
+        Question, on_delete=models.CASCADE, related_name="exam_answers"
+    )
+    result = models.CharField(
+        max_length=12, choices=Result.choices, default=Result.UNANSWERED
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["attempt", "question"], name="unique_exam_answer"
             )
         ]

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load content %}
+{% block title %}我的笔记{% endblock %}
+{% block content %}
+<header class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+  <div>
+    <p class="small text-muted mb-1"><a href="{% url 'me' %}">← 返回「我的」</a></p>
+    <h1>我的笔记</h1>
+  </div>
+  <p class="text-muted small mb-1">共 {{ page_obj.paginator.count }} 条笔记</p>
+</header>
+
+{% for note in page_obj %}
+<article class="question-card p-3 p-md-4 mb-3" id="question-{{ note.question.pk }}">
+  <header class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <a class="fw-semibold" href="{% url 'question-detail' note.question.pk %}">第{{ note.question.question_no }}题</a>
+      <span class="badge text-bg-light">{{ note.question.get_question_type_display }}</span>
+    </div>
+    <a class="small" href="{% url 'paper-detail' note.question.paper.pk %}">{{ note.question.paper.title }}</a>
+  </header>
+  <div class="question-content mb-3">{{ note.question.stem_md|render_markdown }}</div>
+  <details class="mb-3">
+    <summary>查看答案与解析</summary>
+    {% if note.question.answer_md %}<div class="question-content mt-3"><strong>答案：</strong>{{ note.question.answer_md|render_markdown }}</div>{% endif %}
+    <div class="question-content mt-3">{{ note.question.solution_md|render_markdown }}</div>
+  </details>
+  <div class="border-start border-4 border-warning ps-3">
+    <p class="small text-muted mb-1">📝 我的笔记 · 更新于 {{ note.updated_at|date:"Y-m-d H:i" }}</p>
+    <div class="question-content">{{ note.body|render_markdown }}</div>
+  </div>
+  <div class="d-flex gap-2 mt-3">
+    <a class="btn btn-sm btn-outline-warning" href="{% url 'question-detail' note.question.pk %}#note-editor">编辑笔记</a>
+  </div>
+</article>
+{% empty %}
+<p class="text-muted">还没有记过任何笔记。在题目详情页底部可以添加笔记。</p>
+{% endfor %}
+
+{% include "question_bank/_pagination.html" %}
+{% endblock %}

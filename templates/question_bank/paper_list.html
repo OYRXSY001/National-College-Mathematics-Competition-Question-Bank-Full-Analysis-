@@ -10,7 +10,9 @@
   <section class="col-12 col-lg-9">
     <h1 class="h3 mb-3">{% if search_page %}搜题结果{% elif question_mode %}题目结果{% else %}真题库{% endif %}</h1>
     {% if question_mode %}
-      {% for question in page_obj %}{% include "question_bank/_question_card.html" %}{% empty %}<p class="text-secondary">没有符合条件的题目。</p>{% endfor %}
+      {% for question in page_obj %}{% include "question_bank/_question_card.html" %}{% empty %}
+        <p class="text-secondary">没有符合条件的题目。<a href="{% url 'paper-list' %}">清空筛选</a>或换一个关键词试试，也可以<a href="{% url 'paper-list' %}?edition=17">看最近一届真题</a>。</p>
+      {% endfor %}
     {% else %}
       <div class="paper-grid">
         {% for paper in page_obj %}
@@ -19,7 +21,7 @@
             <h2><a href="{% url 'paper-detail' paper.pk %}">{{ paper.title }}</a></h2>
             <p class="paper-category">原卷类别：{{ paper.original_category_label }}</p>
           </article>
-        {% empty %}<p class="text-secondary">没有符合条件的试卷。</p>{% endfor %}
+        {% empty %}<p class="text-secondary">没有符合条件的试卷。<a href="{% url 'paper-list' %}">清空筛选条件</a>查看全部。</p>{% endfor %}
       </div>
     {% endif %}
     {% include "question_bank/_pagination.html" %}

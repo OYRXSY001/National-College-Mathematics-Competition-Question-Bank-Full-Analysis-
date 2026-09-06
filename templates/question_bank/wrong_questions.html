@@ -8,8 +8,16 @@
 <div class="row g-4">
   <aside class="desktop-filter col-lg-3 d-none d-lg-block"><div class="question-card p-3 sticky-filter">{% include "question_bank/_filters.html" %}</div></aside>
   <section class="col-12 col-lg-9">
-    <h1 class="h3 mb-3">我的错题</h1>
-    {% for question in page_obj %}{% include "question_bank/_question_card.html" %}{% empty %}<p>错题本为空。</p>{% endfor %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h1 class="h3 mb-0">我的错题</h1>
+      <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-outline-secondary btn-sm {% if not mastered %}active{% endif %}" href="{{ clear_url }}">未掌握</a>
+        <a class="btn btn-outline-secondary btn-sm {% if mastered %}active{% endif %}" href="{{ clear_url }}?mastered=1">已掌握</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'practice' %}?scope=review">今日复习</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'practice' %}?scope=book">重新练习错题</a>
+      </div>
+    </div>
+    {% for question in page_obj %}{% include "question_bank/_question_card.html" %}{% empty %}<p>{% if mastered %}没有已掌握的错题。{% else %}错题本为空，去真题库做题，答错的题会自动收进来。{% endif %}</p>{% endfor %}
     {% include "question_bank/_pagination.html" %}
   </section>
 </div>

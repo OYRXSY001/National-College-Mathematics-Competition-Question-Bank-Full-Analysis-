@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}关于本库 · 非数学A类真题库{% endblock %}
+{% block content %}
+<section class="hero-section">
+  <p class="hero-subtitle">About</p>
+  <h1 class="hero-title">关于本库</h1>
+  <p class="text-secondary">一份数学竞赛真题的个人整理作品</p>
+</section>
+
+<section class="question-card p-3 mb-3">
+  <h2 class="h4 mb-3">这个项目是什么</h2>
+  <p>
+    本库系统收录<strong>全国大学生数学竞赛（非数学类 A 类）</strong>第 1 至 17 届的初赛与决赛真题，
+    共 <strong>39 份试卷、254 道题</strong>，每道题均配以可检索的题干、答案与详细解析，
+    全部数学公式经 KaTeX 精确排版渲染。
+  </p>
+  <p class="text-secondary mb-0">
+    项目由个人整理制作，提供 Web 网站与微信小程序两个端；数据经逐题人工复核后发布。
+  </p>
+</section>
+
+<section class="question-card p-3 mb-3">
+  <h2 class="h4 mb-3">收录范围</h2>
+  <table class="table table-bordered align-middle mb-0 about-table">
+    <thead><tr><th>届数</th><th>收录内容</th></tr></thead>
+    <tbody>
+      <tr><td>第 1–14 届</td><td>非数学类统一试卷（部分含原版 PDF）</td></tr>
+      <tr><td>第 15–17 届</td><td>初赛 / 决赛 A、B 双类分卷，附原版试卷 PDF</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="question-card p-3 mb-3">
+  <h2 class="h4 mb-3">功能一览</h2>
+  <ul class="mb-0">
+    <li>按届数、阶段、题型、知识点多维筛选题目</li>
+    <li>关键词全文检索，覆盖题干、答案与解析</li>
+    <li>注册用户支持收藏夹与错题本</li>
+    <li>第 14–17 届可在线下载原版试卷 PDF</li>
+  </ul>
+</section>
+
+<section class="question-card p-3 about-author-card">
+  <h2 class="h4 mb-2">出品人</h2>
+  <p class="hero-title accent mb-1">{{ site_author }}</p>
+  <p class="text-secondary mb-0">
+    本项目为个人学习交流用途整理的作品，转载请保留出处；
+    如发现题目或解析有误，欢迎向出品人反馈。
+  </p>
+</section>
+{% endblock %}

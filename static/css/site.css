@@ -1139,3 +1139,34 @@ details summary.btn::before {
   background: rgba(139, 92, 246, 0.3);
   color: var(--text-primary);
 }
+
+/* ---------- Site Footer (author attribution) ---------- */
+.site-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding: 22px 0 30px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+.site-footer .site-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+}
+.site-footer a { color: var(--text-secondary); }
+.site-footer a:hover {
+  color: var(--accent-cyan);
+  text-shadow: var(--glow-cyan);
+}
+.site-footer .site-footer-author {
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.site-footer .site-footer-note { opacity: 0.85; }
+.about-table th,
+.about-table td { border-color: var(--border-subtle); }
+.about-author-card { text-align: left; }

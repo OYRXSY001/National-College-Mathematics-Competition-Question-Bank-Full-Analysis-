@@ -3,6 +3,19 @@
 {% block content %}
 <p><a href="{% url 'paper-detail' question.paper.pk %}">← {{ question.paper.title }}</a></p>
 {% include "question_bank/_question_card.html" %}
+{% if user.is_authenticated %}
+<section class="question-card p-3 p-md-4 mt-3" id="note-editor" aria-labelledby="note-editor-title">
+  <h2 id="note-editor-title" class="h4">我的笔记</h2>
+  <form method="post" action="{% url 'note-save' question.pk %}">
+    {% csrf_token %}
+    <textarea class="form-control mb-2" name="body" rows="5" placeholder="记录你的思路、易错点……支持 Markdown 与公式（$$...$$）。">{{ user_note.body|default:"" }}</textarea>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary btn-sm" type="submit">保存笔记</button>
+      {% if user_note %}<button class="btn btn-outline-danger btn-sm" type="submit" name="clear" value="1">删除笔记</button>{% endif %}
+    </div>
+  </form>
+</section>
+{% endif %}
 <nav class="d-flex justify-content-between mt-4" aria-label="上下题">
   {% if previous_question %}<a href="{% url 'question-detail' previous_question.pk %}">上一题</a>{% else %}<span></span>{% endif %}
   {% if next_question %}<a href="{% url 'question-detail' next_question.pk %}">下一题</a>{% endif %}

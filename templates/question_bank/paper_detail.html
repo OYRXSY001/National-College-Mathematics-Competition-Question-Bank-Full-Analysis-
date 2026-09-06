@@ -8,6 +8,12 @@
     {% if paper.pdf_file %}
       <a class="btn btn-outline-primary" href="{% url 'paper-download' paper.pk %}">下载 PDF</a>
     {% endif %}
+    <a class="btn btn-outline-secondary" href="{% url 'paper-print' paper.pk %}">🖨 打印整卷</a>
+    <form method="post" action="{% url 'exam-start' paper.pk %}" class="d-inline">
+      {% csrf_token %}
+      <button class="btn btn-outline-primary" type="submit">⏱ 模拟考试</button>
+    </form>
+    <a class="btn btn-primary" href="{% url 'practice' %}?scope=paper:{{ paper.pk }}">连续刷本卷</a>
   </div>
 </header>
 <nav class="question-number-nav d-flex gap-2 overflow-x-auto mb-3" aria-label="题号导航">

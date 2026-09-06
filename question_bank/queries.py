@@ -1,7 +1,7 @@
 from django.db.models import Exists, OuterRef, Q
 
 from .forms import QuestionFilterForm
-from .models import Favorite, Question, WrongQuestion
+from .models import Favorite, Note, Question, WrongQuestion
 
 
 def filtered_questions(params, base_queryset=None):
@@ -39,6 +39,7 @@ def with_user_flags(queryset, user):
         return queryset.annotate(
             is_favorite=Exists(Favorite.objects.none()),
             is_wrong=Exists(WrongQuestion.objects.none()),
+            has_note=Exists(Note.objects.none()),
         )
     return queryset.annotate(
         is_favorite=Exists(
@@ -47,4 +48,5 @@ def with_user_flags(queryset, user):
         is_wrong=Exists(
             WrongQuestion.objects.filter(user=user, question_id=OuterRef("pk"))
         ),
+        has_note=Exists(Note.objects.filter(user=user, question_id=OuterRef("pk"))),
     )

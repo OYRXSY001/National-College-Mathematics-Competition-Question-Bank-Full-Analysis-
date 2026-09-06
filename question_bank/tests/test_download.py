@@ -1,5 +1,6 @@
 import tempfile
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -10,6 +11,8 @@ from question_bank.models import Paper
 
 class PaperDownloadTests(TestCase):
     def setUp(self):
+        self.user = get_user_model().objects.create_user("download-tester")
+        self.client.force_login(self.user)
         self.media_root = tempfile.TemporaryDirectory()
         self.settings = override_settings(MEDIA_ROOT=self.media_root.name)
         self.settings.enable()
